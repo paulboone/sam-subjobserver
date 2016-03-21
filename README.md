@@ -1,6 +1,6 @@
 # SAM SUBJOBSERVER
 
-This server lets you queue your own jobs outside of the SAM qsub queue.The advantages are:
+This server lets you queue your own jobs outside of the SAM qsub queue. The advantages are:
 
 - No need to write custom code to run multiple jobs on the same reserved SAM node. (i.e. no need to say run the first 100 materials on node1, the second 100 materials on node2, etc).
 - Can queue all the jobs you want to run without reserving any SAM resources.
@@ -19,3 +19,9 @@ To test this locally, `cd sample` and run each of these in a different terminal 
 - `python sample_enqueue.py`
 - `rq worker sample_queue`
 
+On the old RHEL machines we have in SAM, you may have to run this before running `rq worker`:
+
+```
+export LC_ALL=en_US.utf-8
+export LANG=en_US.utf-8
+```
