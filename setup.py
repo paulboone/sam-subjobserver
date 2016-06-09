@@ -1,13 +1,9 @@
 from distutils.core import setup
 
 setup(
-    name="sam_subjobserver",
+    name="sjs",
     version="0.1",
-    py_modules=[],
     scripts=['bin/sjs_launch_workers.sh', 'bin/sjs_status.py'],
-    )
-
-# install_requires=[
-#     'redis',
-#     'rq'
-# ],
+    install_requires=['redis'],
+    packages=['sjs']
+)
