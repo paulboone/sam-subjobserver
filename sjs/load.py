@@ -37,3 +37,6 @@ def get_job_queue():
 
 def get_redis_conn():
     return redis_conn
+
+def get_sjs_config():
+    return sjs_config
