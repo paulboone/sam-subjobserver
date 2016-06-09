@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
+import sys
 
 import yaml
 from redis import Redis
 from rq import Worker, Queue
 
-with open('hpc.yaml', 'r') as yaml_file:
-    hpc_config = yaml.load(yaml_file)
+import sjs
 
-redis_conn = Redis(**hpc_config['redis'])
+filepath = sjs.DEFAULT_CONFIG_LOCATION
+if len(sys.argv) > 1:
+    filepath = sys.argv[1]
+
+if not sjs.load(filepath):
+    raise SystemExit("SJS did not load correctly; is the configuration file there?")
+
+redis_conn = sjs.get_redis_conn()
 
 def job_string(j):
     if j is None:
