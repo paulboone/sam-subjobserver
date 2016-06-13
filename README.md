@@ -6,22 +6,96 @@ This server lets you queue your own jobs outside of the SAM qsub queue. The adva
 - Can queue all the jobs you want to run without reserving any SAM resources.
 - Can launch as many SAM resources as you want at any time to burn through the queue. If it isn't going fast enough, add more SAM resources later.
 
-## Sample Code
 
-See ./sample for example code to queue jobs on the server:
+## Recommended environment setup for Frank
+
+The recommended environment is my python 3.5.1 binary, and a venv for your the project's requirements.
+
+Setup (sam-moduiles)[https://github.com/paulboone/sam-modules] so you can use my pre-compiled python 3.5.1 binary.
+
+
+First time project setup:
+
+```
+module purge
+module load python/3.5.1
+
+# Create virtual environment
+mkdir -p ~/venv
+pyvenv ~/venv/{your_project_name}
+source ~/venv/{your_project_name}/bin/activate
+
+cd {path to your project}
+
+pip install -r requirements.txt
+```
+
+When you want to run your project in the future:
+
+```
+module purge
+module load python/3.5.1
+source ~/venv/{your_project_name}/bin/activate
+cd {path to your project}
+```
+
+Those commands will also be in your qsub script.
+
+## Configuration setup
+
+The jobserver expects there to be a settings directory at the root level of your project. This directory should be a python module (i.e. include a __init__.py file). The two files it expects are:
+
+- rq_worker_config.py
+- sjs.yaml
+
+You can copy the sample_settings directory from this project to your project as a starting point. Whoever deploys your software should configure those files specifically to the deployment environment. When you run your project locally to test, you should copy those config files (removing the '.sample') and adjust for your local environment. The sample files are setup right now to work with minimal changes on a local install.
+
+Each project should run from its own database, so make sure you ask for a unique database_id to place in your config files.
+
+## Running on Frank
+
+Running your job on frank will take two steps: 1) queuing the work on the subjobserver and then 2) running a qsub file to load workers on the HPC cluster.
+
+### Queueing the work
+
+To queue your work on the subjobserver, start with a script that runs all your work serially. You should have a method that runs a unit of work, which could be one material simulation, one paired interpenetration test, one RASPA run, a set of RASPA runs across a material type, etc. That method should have parameters that fully define what it needs to do, i.e. you should be able to load up a python console, import the file your method is in, then call your method with the parameters you want, and have it do the work you want it to do. As long as that is the case, queuing that unit of work, rather than running it, is trivial and looks like this:
+
+```
+from sample_job import job_that_takes_a_long_time
+import sjs
+sjs.load(os.path.join("settings","sjs.yaml"))
+job_queue = sjs.get_job_queue()
+
+## run the job normally...
+job_that_takes_a_long_time(10)
+
+## or queue the job on the subjobserver...
+job_queue.enqueue(job_that_takes_a_long_time, 10)
+```
+
+Once your job is queued, it won't run until you launch some resources on the HPC cluster. Until then it will sit in the queue. You can use the command `sjs_status.py` or `rq info -u redis://{your_redis_url}` to look at the contents of the queue.
+
+### Launching workers on the HPC cluster
+
+You will need a qsub script in your project. See sample/launch_workers_qsub.sh for a template you can start with. The qsub file does a few main things:
+
+- it loads python and the venv
+- it runs sjs_launch_workers.sh with parameters for number of workers to run and whether the workers should stay alive after the queue is empty.
+- cleanup
+
+You should be able to use the qsub sample file as-is except for changing the PBS parameters and loading the venv specific to your project.
+
+You must run the qsub script from your project root.
+
+## Additional sample code for standalone interaction with the subjobserver
+
+See ./sample/standalone-example for example code to queue jobs on the server:
 
 - sample_job.py is a sample job file, i.e. the difficult work you need run on a supercomputer.
 - sample_enqueue.py is a sample enqueuing script, that enqueues the sample job to run later.
 
-To test this locally, `cd sample` and run each of these in a different terminal window:
+To test this locally, `cd sample/standalone-example` and run each of these in a different terminal window:
 
 - `redis-server`
 - `python sample_enqueue.py`
 - `rq worker sample_queue`
-
-On the old RHEL machines we have in SAM, you may have to run this before running `rq worker`:
-
-```
-export LC_ALL=en_US.utf-8
-export LANG=en_US.utf-8
-```
