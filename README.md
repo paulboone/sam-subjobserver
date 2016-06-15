@@ -99,3 +99,58 @@ To test this locally, `cd sample/standalone-example` and run each of these in a 
 - `redis-server`
 - `python sample_enqueue.py`
 - `rq worker sample_queue`
+
+
+## Cheat sheet
+
+Two views of checking what is happening on the job server:
+
+one-time:
+```
+rq info -u redis://10.201.0.11:6379/1
+sjs_status.py settings/sjs.yaml
+```
+
+ongoing:
+
+```
+watch rq info -u redis://10.201.0.11:6379/{your db #}
+watch sjs_status.py settings/sjs.yaml
+```
+
+Variations of launching workers on the cluster:
+
+```
+# launch with default settings
+qsub launch_workers_qsub.sh
+
+# launch but keep workers running, even if the queue is empty
+# (useful when running multi-generational jobs)
+qsub -v stay_alive=1 launch_workers_qsub.sh
+
+# launch four cores on one node
+qsub -l nodes=1:ppn=4 launch_workers_qsub.sh
+
+
+# launch four cores each on two nodes
+qsub -l nodes=1:ppn=4 launch_workers_qsub.sh
+qsub -l nodes=1:ppn=4 launch_workers_qsub.sh
+
+### NOTE THAT I RAN THE COMMAND TWICE, AND DID NOT RUN:
+# qsub -l nodes=2:ppn=4 launch_workers_qsub.sh
+# frank does not easily support multi-node jobs. This will be improved with the new cluster
+# upgrade happening later this year!
+```
+
+Debugging problems:
+
+```
+## requeue all failed jobs
+rq requeue -a -u redis://10.201.0.11:6379/{your db #}
+
+## delete all queued jobs
+rq empty -a -u redis://10.201.0.11:6379/{your db #}
+
+```
+
+See `rq --help` for more information and more detail on those commands.
