@@ -20,6 +20,17 @@
 echo JOB_ID: $PBS_JOBID JOB_NAME: $PBS_JOBNAME HOSTNAME: $PBS_O_HOST
 echo start_time: `date`
 
+if [ "$PBS_NUM_NODES" -gt "1" ]; then
+  echo "
+This script only supports launching workers on one node at a time.
+You can launch multiple nodes by running the script multiple times.
+
+(This is due to a limitation of how Frank is setup; when we switch over to
+the new servers, this limitation should go away).
+"
+  exit 64
+fi
+
 # dependencies
 module purge
 module load python/3.5.1
