@@ -4,7 +4,7 @@ import os.path
 from redis import Redis
 from rq import Queue
 
-DEFAULT_CONFIG_LOCATION='hpc.yaml'
+DEFAULT_CONFIG_LOCATION=os.path.join('settings','sjs.yaml')
 
 job_queue = None
 redis_conn = None
@@ -14,9 +14,10 @@ def load(filepath=DEFAULT_CONFIG_LOCATION):
     global sjs_config, redis_conn, job_queue
 
     if not os.path.exists(filepath):
-        print("file does not exist?")
+        print("Cannot find the configuration yaml file at %s!" % filepath)
+        print("Try running this command from your project directory.")
         # do not throw an error here because this is likely just the user running
-        # the sfystem locally.
+        # the system locally.
         return False
 
     with open(filepath, 'r') as yaml_file:

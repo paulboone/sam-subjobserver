@@ -12,7 +12,7 @@ if len(sys.argv) > 1:
     filepath = sys.argv[1]
 
 if not sjs.load(filepath):
-    raise SystemExit("SJS did not load correctly; is the configuration file there?")
+    raise SystemExit()
 
 redis_conn = sjs.get_redis_conn()
 
