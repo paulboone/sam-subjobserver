@@ -17,6 +17,8 @@ if len(sys.argv) > 1:
 if not sjs.load(filepath):
     raise SystemExit()
 
+sjs.run_pre_queue_checks(exit_on_fail=True)
+
 redis_conn = sjs.get_redis_conn()
 q = sjs.get_job_queue()
 

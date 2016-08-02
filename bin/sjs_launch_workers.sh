@@ -2,6 +2,11 @@
 
 num_workers=$1
 stay_alive=$2
+run_pre_check=$3
+
+if ! $run_pre_check; then
+  run_pre_check=1
+fi;
 
 rq_args="-b"
 if [ "$stay_alive" == "1" ]; then
@@ -13,6 +18,15 @@ export LC_ALL=en_US.utf-8
 export LANG=en_US.utf-8
 
 mkdir -p logs
+
+if $run_pre_check; then
+  scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  $scriptdir/sjs_worker_pre_check.py
+  result=$?
+  if [ $result -ne 0 ]; then
+    exit 1
+  fi;
+fi;
 
 # This file must be run from the application directory
 hostname=`uname -n`
