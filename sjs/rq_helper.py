@@ -14,15 +14,12 @@ from rq.job import Job
 from rq.registry import StartedJobRegistry
 import yaml
 
-redis_conn = sjs.get_redis_conn()
-sjs_config = sjs.get_sjs_config()
-
 def jobs_failed():
-    failed_queue = get_failed_queue(connection=redis_conn)
+    failed_queue = get_failed_queue(connection=sjs.get_redis_conn())
     return failed_queue.get_job_ids()
 
 def requeue_failed_jobs():
-    failed_queue = get_failed_queue(connection=redis_conn)
+    failed_queue = get_failed_queue(connection=sjs.get_redis_conn())
 
     jobs_to_requeue = failed_queue.get_job_ids()
     for job_id in jobs_to_requeue:
@@ -31,7 +28,7 @@ def requeue_failed_jobs():
     return jobs_to_requeue
 
 def jobs_running():
-    registry = StartedJobRegistry(name=sjs_config['queue'], connection=redis_conn)
+    registry = StartedJobRegistry(name=sjs.get_sjs_config()['queue'], connection=sjs.get_redis_conn())
     return registry.get_job_ids()
 
 def jobs_queued():
@@ -45,4 +42,4 @@ def timestamp():
 #     return session.query(func.max(Material.generation)).filter(Material.run_id == run_id).one()[0]
 
 def manage_run_results(job_id):
-    return Job.fetch(job_id, connection=redis_conn).result
+    return Job.fetch(job_id, connection=sjs.get_redis_conn()).result
