@@ -3,30 +3,29 @@
 #
 # module load python/anaconda3-2.3.0-rhel
 
-from rq import Queue
-from redis import Redis
-
+import sys
 from time import sleep
+
+import sjs
 
 from sample_job import job_that_takes_a_long_time
 
+filepath = sjs.DEFAULT_CONFIG_LOCATION
+if len(sys.argv) > 1:
+    filepath = sys.argv[1]
 
-# use local redis (for testing and development)
-redis_conn = Redis()
+if not sjs.load(filepath):
+    raise SystemExit()
 
-# uncomment to use SAM job server redis (for production work on SAM)
-# redis_conn = Redis(host='app1.sam.pitt.edu', port=6379, db=0)
-
-# replace 'sample_queue' with your queue name
-# if you do this, make sure you run your worker on that queue, e.g. `rq worker {your_queue_name}`
-q = Queue('sample_queue', connection=redis_conn)
+redis_conn = sjs.get_redis_conn()
+q = sjs.get_job_queue()
 
 # enqueue sample jobs
 jobs = []
 jobs.append(q.enqueue(job_that_takes_a_long_time, 10))
 jobs.append(q.enqueue(job_that_takes_a_long_time, 60))
 
-# NOTE: 
+# NOTE:
 # Just because a job is queued, doesn't mean there are any workers to run it. If you are testing,
 # you should go ahead and and start a worker with `rq worker`.
 
