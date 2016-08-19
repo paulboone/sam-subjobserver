@@ -3,7 +3,6 @@ import locale
 import subprocess
 from subprocess import PIPE
 
-
 from sjs.rq_helper import jobs_failed, jobs_running, jobs_queued
 
 _ENCODING = locale.getpreferredencoding()
@@ -27,6 +26,7 @@ def check_repo_is_up_to_date():
 
     results = subprocess.run(['git','status', '-b', '--porcelain'], check=True, stdout=PIPE)
     tracking_line = results.stdout.decode(_ENCODING).strip().split('\n')[0]
+
     # if the branch is ahead of or behind the tracking branch
     # it will look like '[ahead *]' or '[behind *]' so we just search for the bracket.
     if tracking_line.find('[') >= 0:

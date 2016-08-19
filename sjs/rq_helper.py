@@ -8,11 +8,12 @@ import os
 import sys
 from datetime import datetime
 
-import sjs
 from rq.queue import get_failed_queue
 from rq.job import Job
 from rq.registry import StartedJobRegistry
 import yaml
+
+import sjs
 
 def jobs_failed():
     failed_queue = get_failed_queue(connection=sjs.get_redis_conn())
@@ -37,9 +38,6 @@ def jobs_queued():
 
 def timestamp():
     return datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-
-# def last_generation():
-#     return session.query(func.max(Material.generation)).filter(Material.run_id == run_id).one()[0]
 
 def manage_run_results(job_id):
     return Job.fetch(job_id, connection=sjs.get_redis_conn()).result
