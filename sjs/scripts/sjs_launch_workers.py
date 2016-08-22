@@ -8,22 +8,10 @@ import click
 
 import sjs
 
-# these are defined as globals here in case we need to kill / close them manually
-# on an interrupt. See signal_handler that immediately follows.
-
-log_files = []
-
-def signal_handler(_, frame):
+def signal_handler(signal_received, frame):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
-
-    print("... killing any workers")
-    os.killpg(os.getpid(), signal.SIGTERM)
-
-    print("... closing any files")
-    for f in log_files:
-        f.close()
-    print("ready to exit!")
+    print("Received signal %s. Exiting." % signal_received)
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -62,6 +50,7 @@ def launch_workers(num_workers, burst, run_pre_check):
 
     print("")
     workers = []
+    log_files = []
     cmd = ['rq', 'worker', rq_args, '-c', 'settings.rq_worker_config']
     for i in range(num_workers):
         logname = 'logs/%s_%s_%s.log' % (hostname, timestamp, i)
@@ -75,11 +64,19 @@ def launch_workers(num_workers, burst, run_pre_check):
 
     print("")
     print("Waiting for workers to exit...")
-    for w in workers:
-        w.wait()
-
-    for f in log_files:
-        f.close()
+    try:
+        for w in workers:
+            w.wait()
+    except SystemExit:
+        # if this process is forced to exit, we kill the workers, and wait for them to
+        # exit, before finally closing the log files.
+        print("... killing any workers")
+        os.killpg(os.getpid(), signal.SIGTERM)
+        for w in workers:
+            w.wait()
+    finally:
+        for f in log_files:
+            f.close()
 
     print("")
     print("All done!")
