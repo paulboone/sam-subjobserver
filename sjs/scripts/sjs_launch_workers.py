@@ -10,15 +10,16 @@ import sjs
 
 # these are defined as globals here in case we need to kill / close them manually
 # on an interrupt. See signal_handler that immediately follows.
-global log_files
-log_files = []
-global workers
-workers = []
 
-def signal_handler(signal, frame):
-    print("... killing any workers (%s were created)" % len(workers))
-    for w in workers:
-        w.terminate()
+log_files = []
+
+def signal_handler(_, frame):
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+    print("... killing any workers")
+    os.killpg(os.getpid(), signal.SIGTERM)
+
     print("... closing any files")
     for f in log_files:
         f.close()
@@ -60,6 +61,7 @@ def launch_workers(num_workers, burst, run_pre_check):
         print("Workers and launch_workers script will stay alive until killed.")
 
     print("")
+    workers = []
     cmd = ['rq', 'worker', rq_args, '-c', 'settings.rq_worker_config']
     for i in range(num_workers):
         logname = 'logs/%s_%s_%s.log' % (hostname, timestamp, i)
