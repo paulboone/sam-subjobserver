@@ -4,7 +4,7 @@ import os.path
 from redis import Redis
 from rq import Queue
 
-DEFAULT_CONFIG_LOCATION=os.path.join('settings','sjs.yaml')
+DEFAULT_CONFIG_LOCATION=os.path.join('./', 'settings', 'sjs.yaml')
 
 job_queue = None
 redis_conn = None
