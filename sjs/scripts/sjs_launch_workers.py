@@ -1,4 +1,3 @@
-import atexit
 from datetime import datetime
 import os
 import signal
@@ -9,30 +8,25 @@ import click
 
 import sjs
 
-def atexit_aborted_run():
-    print("... killing any workers in %s" % workers)
+# these are defined as globals here in case we need to kill / close them manually
+# on an interrupt. See signal_handler that immediately follows.
+global log_files
+log_files = []
+global workers
+workers = []
+
+def signal_handler(signal, frame):
+    print("... killing any workers (%s were created)" % len(workers))
     for w in workers:
         w.terminate()
     print("... closing any files")
     for f in log_files:
         f.close()
     print("ready to exit!")
-
-atexit.register(atexit_aborted_run)
-
-def signal_handler(signal, frame):
-    print("exiting due to signal %s" % signal)
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
-
-# these are defined as globals here in case we need to kill / close them manually
-# on an interrupt.
-global log_files
-log_files = []
-global workers
-workers = []
 
 @click.command()
 @click.option('--burst/--stay-alive', '-b/ ', default=True)
@@ -66,8 +60,6 @@ def launch_workers(num_workers, burst, run_pre_check):
         print("Workers and launch_workers script will stay alive until killed.")
 
     print("")
-    # workers = []
-    # log_files = []
     cmd = ['rq', 'worker', rq_args, '-c', 'settings.rq_worker_config']
     for i in range(num_workers):
         logname = 'logs/%s_%s_%s.log' % (hostname, timestamp, i)
@@ -86,9 +78,6 @@ def launch_workers(num_workers, burst, run_pre_check):
 
     for f in log_files:
         f.close()
-
-    # it should be safe to rerun, but we'd rather not have the messages printed.
-    atexit.unregister(atexit_aborted_run)
 
     print("")
     print("All done!")
