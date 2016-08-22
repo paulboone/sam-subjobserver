@@ -1,9 +1,19 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name="wilmerlab-sjs",
     version="0.2.1",
-    scripts=['bin/sjs_launch_workers.sh', 'bin/sjs_status.py'],
-    install_requires=['redis'],
-    packages=['sjs']
+    install_requires=[
+        'click',
+        'pyyaml',
+        'redis',
+        'rq',
+    ],
+    include_package_data=True,
+    packages=['sjs'],
+    entry_points={
+        'console_scripts': [
+            'sjs_status=sjs.scripts.sjs_status:sjs_status',
+        ]
+    }
 )

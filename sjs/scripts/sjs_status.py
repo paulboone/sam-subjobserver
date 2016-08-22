@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 
 import click
@@ -34,7 +33,3 @@ def sjs_status(config):
         print("queue %s:" % q.name)
         for j in q.get_jobs():
             print(job_string(j))
-
-
-if __name__ == '__main__':
-    sjs_status()
