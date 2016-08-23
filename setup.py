@@ -15,8 +15,8 @@ setup(
     packages=['sjs'],
     entry_points={
         'console_scripts': [
-            'sjs_status=sjs.scripts.sjs_status:sjs_status',
-            'sjs_launch_workers=sjs.scripts.sjs_launch_workers:launch_workers',
+            'sjs_status=sjs.scripts.status:status',
+            'sjs_launch_workers=sjs.scripts.launch_workers:launch_workers',
         ]
     },
 )
