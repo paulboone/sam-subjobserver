@@ -14,7 +14,7 @@ def job_string(j):
 
 @click.command()
 @click.option('--config', '-c', default=sjs.DEFAULT_CONFIG_LOCATION, help='path to config yaml file')
-def sjs_status(config):
+def status(config):
     if not sjs.load(config):
         raise SystemExit()
 
