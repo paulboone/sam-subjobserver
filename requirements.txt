@@ -1,0 +1,5 @@
+
+click
+git+https://github.com/paulboone/rq.git@handle_sigterms
+pyyaml
+redis
