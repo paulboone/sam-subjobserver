@@ -1,5 +1,6 @@
 
 import locale
+import os
 import subprocess
 from subprocess import PIPE
 
@@ -54,10 +55,24 @@ def check_job_queues_are_empty():
 
     return results
 
+def check_log_dir_is_empty():
+    results = ""
+
+    log_dir = os.path.join("./","logs")
+    logs = os.listdir(log_dir)
+
+    if len(logs) > 0:
+        results += "There are %s logs in the log dir; please empty them before continuing." % len(logs)
+
+    return results
+
+
+
 PRE_QUEUE_CHECKS=[
     check_repo_is_not_dirty,
     check_repo_is_up_to_date,
     check_job_queues_are_empty,
+    check_log_dir_is_empty,
 ]
 
 PRE_WORKER_CHECKS=[
