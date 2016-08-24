@@ -23,6 +23,11 @@ def create_env_record():
 
     return env
 
+def save_env_record(path):
+    env = create_env_record()
+    with open(path, 'w') as f:
+        f.write(yaml.dump(env, default_flow_style=False))
+
 @click.command()
 def env_record():
     env = create_env_record()
