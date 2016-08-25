@@ -2,7 +2,7 @@
 import re
 import subprocess
 
-def archive_file_list(dirs, exclude_patterns):
+def archive_file_list(dirs, exclude_patterns=[]):
     uncommitted_files = []
     for d in dirs:
         filelist = subprocess.check_output(['git','ls-files','-o',d], universal_newlines=True)

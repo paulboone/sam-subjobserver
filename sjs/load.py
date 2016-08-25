@@ -22,6 +22,8 @@ def load(filepath=DEFAULT_CONFIG_LOCATION):
 
     with open(filepath, 'r') as yaml_file:
         sjs_config = yaml.load(yaml_file)
+        sjs_config['archive_dir'] = os.path.expanduser(sjs_config['archive_dir'])
+        sjs_config['working_dir'] = os.path.expanduser(sjs_config['working_dir'])
 
     redis_conn = Redis(**sjs_config['redis'])
     if 'queue' in sjs_config:
