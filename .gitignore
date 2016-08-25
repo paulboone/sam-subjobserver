@@ -6,3 +6,4 @@ build
 dist
 wilmerlab_sjs.egg-info
 logs
+.sjs_running

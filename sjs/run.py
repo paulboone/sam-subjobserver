@@ -6,7 +6,7 @@ import yaml
 
 import sjs
 from sjs.pre_checks import run_pre_queue_checks
-from sjs.scripts.env_record import save_env_record
+from sjs.env_record import save_env_record
 from sjs.archive import archive_file_list, create_archive
 
 DEFAULT_WORKING_DIR = os.path.expanduser("~/.sjs")
@@ -14,12 +14,24 @@ DEFAULT_ARCHIVE_DIR = os.path.expanduser("~/sjs_archive")
 
 SJS_RUNNING_FILE = '.sjs_running'
 
+def get_sjs_running_file():
+    if os.path.exists(SJS_RUNNING_FILE):
+        with open(SJS_RUNNING_FILE, 'r') as f:
+            working_dir = f.read().strip()
+            return working_dir
+
+    return None
+
+def write_sjs_running_file(working_dir):
+    with open(SJS_RUNNING_FILE, 'w') as f:
+        f.write(working_dir)
+
 def initialize_run(skip_pre_checks=False):
     if not skip_pre_checks:
         run_pre_queue_checks(exit_on_fail=True)
 
     # setup .sjs_running_file
-    if os.path.exists(SJS_RUNNING_FILE):
+    if get_sjs_running_file():
         print("%s file already exists. Are you in the middle of a run / did the last run fail " \
             "without finishing successfully? If you are certain there is nothing else that is " \
             "running, delete the file and try again." % SJS_RUNNING_FILE)
@@ -36,8 +48,8 @@ def initialize_run(skip_pre_checks=False):
     working_dir = os.path.expanduser(os.path.join(working_dir, run_name))
     os.makedirs(working_dir)
 
-    with open(SJS_RUNNING_FILE, 'w') as f:
-        f.write(working_dir)
+    # create sjs running file
+    write_sjs_running_file(working_dir)
 
     # save starting env record
     env_record_dir = os.path.join(working_dir, 'env_records')
