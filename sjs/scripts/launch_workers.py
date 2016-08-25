@@ -21,12 +21,12 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 @click.command()
 @click.option('--burst/--stay-alive', '-b/ ', default=True)
-@click.option('--run-pre-check/--skip-pre-check', default=True)
+@click.option('--run-pre-checks/--skip-pre-checks', default=True)
 @click.argument('num_workers', default=1)
-def launch_workers(num_workers, burst, run_pre_check):
+def launch_workers(num_workers, burst, run_pre_checks):
     os.makedirs("logs", exist_ok=True)
 
-    if run_pre_check:
+    if run_pre_checks:
         print("Running pre-checks...")
         sjs.run_pre_worker_checks(exit_on_fail=True)
         print("OK!")
