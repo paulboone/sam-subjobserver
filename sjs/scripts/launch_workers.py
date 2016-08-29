@@ -60,18 +60,26 @@ def launch_workers(num_workers, burst, run_pre_checks):
     print("Env record path: %s" % env_record_path)
 
     print("")
-    rq_args = ""
+    rq_args = []
     if burst:
         print("Running in burst mode. Workers and launch_workers script will exit when there " \
               "is no more work to do")
-        rq_args = "-b"
+        rq_args += ["-b"]
     else:
         print("Workers and launch_workers script will stay alive until killed.")
 
     print("")
     workers = []
     log_files = []
-    cmd = ['rq', 'worker', rq_args, '-c', 'settings.rq_worker_config']
+
+    sjs.load()
+    sjs_config = sjs.get_sjs_config()
+    redis_cfg = sjs_config['redis']
+    redis_url = "redis://%s:%s/%s" % (redis_cfg['host'], redis_cfg['port'], redis_cfg['db'])
+    rq_args += ["-u", redis_url]
+    rq_args += [sjs_config['queue']]
+    cmd = ['rq', 'worker', *rq_args]
+
     for i in range(num_workers):
         logname = 'logs/%s_%s_%s.log' % (hostname, timestamp, i)
         print("Launching worker #%s with log file %s" % (i, logname))
