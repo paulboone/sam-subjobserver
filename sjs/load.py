@@ -5,6 +5,7 @@ from redis import Redis
 from rq import Queue
 
 DEFAULT_CONFIG_LOCATION=os.path.join('./', 'settings', 'sjs.yaml')
+DEFAULT_TIMEOUT = 8640000 # 100 days
 
 job_queue = None
 redis_conn = None
@@ -24,6 +25,8 @@ def load(filepath=DEFAULT_CONFIG_LOCATION):
         sjs_config = yaml.load(yaml_file)
         sjs_config['archive_dir'] = os.path.expanduser(sjs_config['archive_dir'])
         sjs_config['working_dir'] = os.path.expanduser(sjs_config['working_dir'])
+        if 'max_seconds_per_job' not in sjs_config:
+            sjs_config['max_seconds_per_job'] = DEFAULT_TIMEOUT
 
     redis_conn = Redis(**sjs_config['redis'])
     if 'queue' in sjs_config:
