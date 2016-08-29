@@ -3,16 +3,23 @@ import os
 import signal
 import subprocess
 import sys
+from time import sleep
 
 import click
+from rq import Worker
 
 import sjs
 from sjs.run import get_sjs_running_file, SJS_RUNNING_FILE
 from sjs.env_record import save_env_record, read_env_record
 
-def signal_handler(signal_received, frame):
+WORKER_POLL_FREQUENCY = 60
+
+def disable_signals():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+def signal_handler(signal_received, frame):
+    disable_signals()
     print("Received signal %s. Exiting." % signal_received)
     sys.exit(0)
 
@@ -58,27 +65,21 @@ def launch_workers(num_workers, burst, run_pre_checks):
     print("Running at timestamp %s" % timestamp)
     print("Log name template: %s_%s_*.log" % (hostname, timestamp))
     print("Env record path: %s" % env_record_path)
-
-    print("")
-    rq_args = []
     if burst:
-        print("Running in burst mode. Workers and launch_workers script will exit when there " \
-              "is no more work to do")
-        rq_args += ["-b"]
+        print("Running in burst mode. Workers and launch_workers script will exit when all " \
+              "workers are idle and the queue is empty.")
     else:
         print("Workers and launch_workers script will stay alive until killed.")
 
     print("")
-    workers = []
+    worker_processes = []
     log_files = []
 
     sjs.load()
     sjs_config = sjs.get_sjs_config()
     redis_cfg = sjs_config['redis']
     redis_url = "redis://%s:%s/%s" % (redis_cfg['host'], redis_cfg['port'], redis_cfg['db'])
-    rq_args += ["-u", redis_url]
-    rq_args += [sjs_config['queue']]
-    cmd = ['rq', 'worker', *rq_args]
+    cmd = ['rq', 'worker', "-u", redis_url, sjs_config['queue']]
 
     for i in range(num_workers):
         logname = 'logs/%s_%s_%s.log' % (hostname, timestamp, i)
@@ -87,20 +88,42 @@ def launch_workers(num_workers, burst, run_pre_checks):
         log = open(logname,'w')
         proc = subprocess.Popen(cmd, stdout=log, stderr=log)
 
-        workers.append(proc)
+        worker_processes.append(proc)
         log_files.append(log)
 
     print("")
     print("Waiting for workers to exit...")
+
     try:
-        for w in workers:
-            w.wait()
+
+        if burst:
+            # there is no point killing workers on the node unless all of them are idle and we can
+            # kill all the workers and release the node. So here we poll every 60s for the current
+            # worker state and if all the workers are idle AND the queue is empty, then we shut
+            # the node down.
+            conn = sjs.get_redis_conn()
+            while True:
+                sleep(WORKER_POLL_FREQUENCY)
+                workers = [ w for w in Worker.all(connection=conn) if w.name.startswith(hostname)]
+                idle_workers = [ w for w in workers if w.state == 'idle' ]
+                if len(idle_workers) == len(workers) and len(sjs.get_job_queue()) == 0:
+                    print("All workers idle; queue is empty.")
+                    disable_signals()
+                    raise SystemExit()
+        else:
+            # wait indefinitely for processes to end. They should never exit though. What should
+            # happen is this script will be sigterm'd when the walltime is exceeded, the signal
+            # handler will get called, an exception will be raised and we'll skip from the wait()
+            # here to the exception handler below
+            for w in worker_processes:
+                w.wait()
+
     except SystemExit:
         # if this process is forced to exit, we kill the workers, and wait for them to
         # exit, before finally closing the log files.
         print("... killing any workers")
         os.killpg(os.getpid(), signal.SIGTERM)
-        for w in workers:
+        for w in worker_processes:
             w.wait()
     finally:
         for f in log_files:
