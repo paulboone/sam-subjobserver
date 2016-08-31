@@ -92,6 +92,7 @@ def launch_workers(num_workers, burst, run_pre_checks):
         log_files.append(log)
 
     print("")
+    print("Worker PIDS: %s" % [ w.pid for w in worker_processes ])
     print("Waiting for workers to exit...")
 
     try:
@@ -122,7 +123,12 @@ def launch_workers(num_workers, burst, run_pre_checks):
         # if this process is forced to exit, we kill the workers, and wait for them to
         # exit, before finally closing the log files.
         print("... killing any workers")
-        os.killpg(os.getpid(), signal.SIGTERM)
+
+        # rq workers must be signaled twice to actually shutdown.
+        # we sleep in between to avoid a signal getting lost.
+        os.killpg(os.getpid(), signal.SIGINT)
+        sleep(1)
+        os.killpg(os.getpid(), signal.SIGINT)
         for w in worker_processes:
             w.wait()
     finally:
