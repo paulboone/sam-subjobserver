@@ -126,9 +126,14 @@ def launch_workers(num_workers, burst, run_pre_checks):
 
         # rq workers must be signaled twice to actually shutdown.
         # we sleep in between to avoid a signal getting lost.
-        os.killpg(os.getpid(), signal.SIGINT)
-        sleep(1)
-        os.killpg(os.getpid(), signal.SIGINT)
+        try:
+            print("sending first SIGINT")
+            os.killpg(os.getpid(), signal.SIGINT)
+            sleep(1)
+            print("sending second SIGINT")
+            os.killpg(os.getpid(), signal.SIGINT)
+        except ProcessLookupError:
+            print("process already killed")
         for w in worker_processes:
             w.wait()
     finally:
