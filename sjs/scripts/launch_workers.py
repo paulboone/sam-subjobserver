@@ -128,10 +128,10 @@ def launch_workers(num_workers, burst, run_pre_checks):
         # we sleep in between to avoid a signal getting lost.
         try:
             print("sending first SIGINT")
-            os.killpg(os.getpid(), signal.SIGINT)
+            os.killpg(os.getpgid(0), signal.SIGINT)
             sleep(1)
             print("sending second SIGINT")
-            os.killpg(os.getpid(), signal.SIGINT)
+            os.killpg(os.getpgid(0), signal.SIGINT)
         except ProcessLookupError:
             print("process already killed")
         for w in worker_processes:
@@ -142,3 +142,4 @@ def launch_workers(num_workers, burst, run_pre_checks):
 
     print("")
     print("All done!")
+    sys.stdout.flush()
