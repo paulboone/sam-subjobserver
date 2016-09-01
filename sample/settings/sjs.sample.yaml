@@ -22,3 +22,7 @@ working_dir: ~/.sjs
 # unspecified, the default of 100 days or 8640000 seconds will be used. In practice, this means
 # your job will run until your worker runs out of walltime.
 # max_seconds_per_job: 8640000
+
+# only use min_seconds_per_job if, when there is less than min_seconds_per_job of walltime left,
+# you want your workers to exit instead of grab the next job from the queue.
+# min_seconds_per_job: 7200

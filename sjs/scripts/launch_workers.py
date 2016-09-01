@@ -96,28 +96,44 @@ def launch_workers(num_workers, burst, run_pre_checks):
     print("Waiting for workers to exit...")
 
     try:
+        conn = sjs.get_redis_conn()
 
-        if burst:
-            # there is no point killing workers on the node unless all of them are idle and we can
-            # kill all the workers and release the node. So here we poll every 60s for the current
-            # worker state and if all the workers are idle AND the queue is empty, then we shut
-            # the node down.
-            conn = sjs.get_redis_conn()
+        if 'min_seconds_per_job' in sjs_config or burst == False:
+            # more complex case of either handling bursted workers, or handling min_seconds_per_job
+            # timeout. Here we run a loop and check conditions each run through the loop.
             while True:
                 sleep(WORKER_POLL_FREQUENCY)
-                workers = [ w for w in Worker.all(connection=conn) if w.name.startswith(hostname)]
-                idle_workers = [ w for w in workers if w.state == 'idle' ]
-                if len(idle_workers) == len(workers) and len(sjs.get_job_queue()) == 0:
-                    print("All workers idle; queue is empty.")
-                    disable_signals()
-                    raise SystemExit()
-        else:
-            # wait indefinitely for processes to end. They should never exit though. What should
-            # happen is this script will be sigterm'd when the walltime is exceeded, the signal
-            # handler will get called, an exception will be raised and we'll skip from the wait()
-            # here to the exception handler below
-            for w in worker_processes:
-                w.wait()
+
+                if burst:
+                    # there is no point killing workers on the node unless all of them are idle and
+                    # we can kill all the workers and release the node. So here we poll for the
+                    # current worker state and if all the workers are idle AND the queue is empty,
+                    # then we shut the node down.
+                    workers = [ w for w in Worker.all(connection=conn) if w.name.startswith(hostname)]
+                    idle_workers = [ w for w in workers if w.state == 'idle' ]
+                    if len(idle_workers) == len(workers) and len(sjs.get_job_queue()) == 0:
+                        print("All workers idle; queue is empty.")
+                        disable_signals()
+                        raise SystemExit()
+
+                if 'min_seconds_per_job' in sjs_config:
+                    try:
+                        results = subprocess.check_output("qstat -i $PBS_JOBID", shell=True, universal_newlines=True)
+                        hours, minutes, seconds = results.strip().split("\n")[-1][-8:].split(":")
+                        walltime_remaining = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+                        if sjs_config['min_seconds_per_job'] > walltime_remaining:
+                            # whatever jobs are being run should be the last, so we can softkill the
+                            # workers here, which will let rq know to exit when the jobs are complete
+                            for worker in worker_processes:
+                                os.kill(worker.pid, signal.SIGINT)
+                            break
+
+                    except Exception as e:
+                        print("Failure getting walltime", e)
+
+        # the simplest case of just running the workers until they exit
+        for w in worker_processes:
+            w.wait()
 
     except SystemExit:
         # if this process is forced to exit, we kill the workers, and wait for them to
