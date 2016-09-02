@@ -93,7 +93,6 @@ def launch_workers(num_workers, burst, run_pre_checks):
 
     print("")
     print("Worker PIDS: %s" % [ w.pid for w in worker_processes ])
-    print("Waiting for workers to exit...")
 
     try:
         conn = sjs.get_redis_conn()
@@ -121,9 +120,11 @@ def launch_workers(num_workers, burst, run_pre_checks):
                         results = subprocess.check_output("qstat -i $PBS_JOBID", shell=True, universal_newlines=True)
                         hours, minutes, seconds = results.strip().split("\n")[-1][-8:].split(":")
                         walltime_remaining = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+
                         if sjs_config['min_seconds_per_job'] > walltime_remaining:
-                            # whatever jobs are being run should be the last, so we can softkill the
-                            # workers here, which will let rq know to exit when the jobs are complete
+                            print("walltime remaining is less than the min seconds required per " \
+                                  "job. Sending SIGINTs to workers so they exit when the " \
+                                  "currently running job is complete")
                             for worker in worker_processes:
                                 os.kill(worker.pid, signal.SIGINT)
                             break
@@ -132,6 +133,7 @@ def launch_workers(num_workers, burst, run_pre_checks):
                         print("Failure getting walltime", e)
 
         # the simplest case of just running the workers until they exit
+        print("Waiting for workers to exit...")
         for w in worker_processes:
             w.wait()
 
