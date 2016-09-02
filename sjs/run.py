@@ -15,6 +15,11 @@ DEFAULT_ARCHIVE_DIR = os.path.expanduser("~/sjs_archive")
 
 SJS_RUNNING_FILE = '.sjs_running'
 
+def run_started():
+    if get_sjs_running_file():
+        return True
+    return False
+
 def get_sjs_running_file():
     if os.path.exists(SJS_RUNNING_FILE):
         with open(SJS_RUNNING_FILE, 'r') as f:
