@@ -66,6 +66,7 @@ def supervisor(queue_script, skip_pre_checks, burst, auto_requeue_fails, resume)
             if len(sjs.jobs_failed()) > 0:
                 if auto_requeue_fails:
                     print_status("Unresolved jobs in failed queue: requeueing.")
+                    sjs.requeue_failed_jobs()
                 else:
                     print_status("Unresolved jobs in failed queue.")
                 continue
