@@ -7,8 +7,6 @@ from rq import Worker
 import sjs
 from sjs.run import initialize_run, end_run, run_started
 
-SUPERVISOR_POLL_FREQUENCY = 60
-
 def disable_signals():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -26,12 +24,13 @@ def print_status():
     pass
 
 @click.command()
-@click.argument('--queue-script', '-q', help='path to executable script that will populate the queue')
+@click.option('--queue-script', '-q', help='path to executable script that will populate the queue')
 @click.option('--skip-pre-checks/--run-pre-checks', default=False)
 @click.option('--burst/--stay-alive', '-b/ ', default=True)
-@click.option('--auto-requeue-fails', default=False)
-@click.option('--resume', '-r', default=False)
-def supervisor(queue_script, skip_pre_checks, burst, auto_requeue_fails, resume):
+@click.option('--auto-requeue-fails', is_flag=True, default=False)
+@click.option('--resume', '-r', is_flag=True, default=False)
+@click.option('--poll-frequency', '-p', default=60, help='frequency status is checked in seconds')
+def supervisor(queue_script, skip_pre_checks, burst, auto_requeue_fails, resume, poll_frequency):
     sjs.load()
     conn = sjs.get_redis_conn()
 
@@ -51,7 +50,7 @@ def supervisor(queue_script, skip_pre_checks, burst, auto_requeue_fails, resume)
     run_looks_complete = False
     try:
         while True:
-            sleep(SUPERVISOR_POLL_FREQUENCY)
+            sleep(poll_frequency)
 
             workers = Worker.all(connection=conn)
             idle_workers = [ w for w in workers if w.state == 'idle' ]
@@ -87,4 +86,4 @@ def supervisor(queue_script, skip_pre_checks, burst, auto_requeue_fails, resume)
         end_run()
     else:
         print("Run looks incomplete, not finalizing the run. You can restart the supervisor " \
-              "script with --resume."
+              "script with --resume.")
