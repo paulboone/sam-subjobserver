@@ -64,9 +64,9 @@ def print_status(status_message=""):
 @click.command()
 @click.option('--auto-finalize', '-af', is_flag=True, default=False)
 @click.option('--auto-requeue-fails', '-ar', is_flag=True, default=False)
-@click.option('--update-frequency', '-f', default=60, help='update frequency in seconds')
+@click.option('--interval', '-n', default=60, help='update interval in seconds')
 @click.option('--skip-run-check', is_flag=True, default=False)
-def monitor(auto_finalize, auto_requeue_fails, update_frequency, skip_run_check):
+def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
     global stdscr
 
     if not skip_run_check and not run_started():
@@ -81,7 +81,7 @@ def monitor(auto_finalize, auto_requeue_fails, update_frequency, skip_run_check)
         with curses_fullscreen() as stdscr:
             while True:
                 if not first_time_through:
-                    sleep(update_frequency)
+                    sleep(interval)
 
                 workers = Worker.all(connection=conn)
                 idle_workers = [ w for w in workers if w.state == 'idle' ]
@@ -108,7 +108,7 @@ def monitor(auto_finalize, auto_requeue_fails, update_frequency, skip_run_check)
                     print_status("Run looks complete but --auto-finalize is off. Waiting for user to cntl-c.")
 
                 first_time_through = False
-                
+
     except SystemExit as e:
         print(e.code)
 

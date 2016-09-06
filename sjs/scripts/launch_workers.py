@@ -12,8 +12,6 @@ import sjs
 from sjs.run import get_sjs_running_file, SJS_RUNNING_FILE
 from sjs.env_record import save_env_record, read_env_record
 
-WORKER_POLL_FREQUENCY = 60
-
 def disable_signals():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -27,10 +25,11 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 @click.command()
+@click.argument('num_workers', default=1)
 @click.option('--burst/--stay-alive', '-b/ ', default=True)
 @click.option('--run-pre-checks/--skip-pre-checks', default=True)
-@click.argument('num_workers', default=1)
-def launch_workers(num_workers, burst, run_pre_checks):
+@click.option('--interval', '-n', default=60, help='update interval in seconds')
+def launch_workers(num_workers, burst, run_pre_checks, interval):
     os.makedirs("logs", exist_ok=True)
 
     if run_pre_checks:
@@ -101,7 +100,7 @@ def launch_workers(num_workers, burst, run_pre_checks):
             # more complex case of either handling bursted workers, or handling min_seconds_per_job
             # timeout. Here we run a loop and check conditions each run through the loop.
             while True:
-                sleep(WORKER_POLL_FREQUENCY)
+                sleep(interval)
 
                 if burst:
                     # there is no point killing workers on the node unless all of them are idle and
