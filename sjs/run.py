@@ -33,15 +33,16 @@ def write_sjs_running_file(working_dir):
         f.write(working_dir)
 
 def initialize_run(skip_pre_checks=False):
-    if not skip_pre_checks:
-        run_pre_queue_checks(exit_on_fail=True)
 
     # setup .sjs_running_file
     if get_sjs_running_file():
         print("%s file already exists. Are you in the middle of a run / did the last run fail " \
             "without finishing successfully? If you are certain there is nothing else that is " \
             "running, delete the file and try again." % SJS_RUNNING_FILE)
-        raise SystemExit("Abort due to pre-existing %s file." % SJS_RUNNING_FILE)
+        raise SystemExit("Aborting due to pre-existing %s file." % SJS_RUNNING_FILE)
+
+    if not skip_pre_checks:
+        run_pre_queue_checks(exit_on_fail=True)
 
     config = sjs.get_sjs_config()
 
