@@ -25,6 +25,11 @@ def load(filepath=DEFAULT_CONFIG_LOCATION):
         sjs_config = yaml.load(yaml_file)
         sjs_config['archive_dir'] = os.path.expanduser(sjs_config['archive_dir'])
         sjs_config['working_dir'] = os.path.expanduser(sjs_config['working_dir'])
+        sjs_config['data_dirs'] = [ os.path.expanduser(os.path.normpath(d))
+                                    for d in sjs_config['data_dirs'] ]
+        sjs_config['config_dirs'] = [ os.path.expanduser(os.path.normpath(d))
+                                      for d in sjs_config['config_dirs'] ]
+
         if 'max_seconds_per_job' not in sjs_config:
             sjs_config['max_seconds_per_job'] = DEFAULT_TIMEOUT
 
