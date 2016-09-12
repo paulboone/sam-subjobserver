@@ -105,8 +105,10 @@ def failure_message(failures):
 def run_check_suite(checks, exit_on_fail=False):
     results = [ (func.__name__,func()) for func in checks ]
     failures = [ tup for tup in results if tup[1] ]
-    if failures and exit_on_fail:
-        raise SystemExit("PRE-CHECKS FAILED!")
+    if failures:
+        print(failure_message(failures))
+        if exit_on_fail:
+            raise SystemExit("PRE-CHECKS FAILED!")
 
     return (results, failures)
 
