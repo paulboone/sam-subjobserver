@@ -80,7 +80,9 @@ def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
     try:
         with curses_fullscreen() as stdscr:
             while True:
-                if not first_time_through:
+                if first_time_through:
+                    first_time_through = False
+                else:
                     sleep(interval)
 
                 workers = Worker.all(connection=conn)
@@ -107,7 +109,7 @@ def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
                 else:
                     print_status("Run looks complete but --auto-finalize is off. Waiting for user to cntl-c.")
 
-                first_time_through = False
+
 
     except SystemExit as e:
         print(e.code)
