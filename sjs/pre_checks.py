@@ -109,7 +109,9 @@ def run_check_suite(checks, exit_on_fail=False):
         print(failure_message(failures))
         if exit_on_fail:
             raise SystemExit("PRE-CHECKS FAILED!")
-
+    else:
+        print("Pre-checks passed.")
+        
     return (results, failures)
 
 def run_pre_queue_checks(exit_on_fail=True):

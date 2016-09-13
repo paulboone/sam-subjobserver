@@ -46,7 +46,7 @@ def initialize_run(skip_pre_checks=False):
 
     config = sjs.get_sjs_config()
 
-    # set up run name and working dir
+    print("Set up run name and working dir...")
     cwd_dirname = os.path.basename(os.path.normpath(os.getcwd()))
     timestamp = datetime.now().strftime("%Y_%m_%d__%H_%M_%S__%f")
     run_name = "%s_%s" % (cwd_dirname, timestamp)
@@ -54,24 +54,30 @@ def initialize_run(skip_pre_checks=False):
     working_dir = config['working_dir'] or DEFAULT_WORKING_DIR
     working_dir = os.path.join(working_dir, run_name)
     os.makedirs(working_dir)
+    print("Working dir: %s" % working_dir)
 
     # create sjs running file
     write_sjs_running_file(working_dir)
 
-    # save starting env record
+    print("Saving starting env record")
     env_record_dir = os.path.join(working_dir, 'env_records')
     os.makedirs(env_record_dir)
     save_env_record(os.path.join(env_record_dir, 'env_record_start.yaml'))
 
-    # archive config files
+    print("Archiving config files")
     file_list = uncommitted_file_list(config['config_dirs'], config['config_ignore'])
     create_archive(file_list, os.path.join(working_dir, 'config.tar.bz'))
 
-    # save run_metadata.yaml file
+    print("Saving run_metadata.yaml file")
     with open(os.path.join(working_dir,'run_metadata.yaml'), 'w') as f:
         f.write(yaml.dump({
             'argv': sys.argv
         }))
+    print("=" * 80)
+    print("Run is initialized!")
+    print("Next steps:")
+    print("- queue your jobs to the sub-job server")
+    print("- launch workers via your qsub script")
 
 def end_run():
     results = {}
