@@ -1,16 +1,18 @@
 import click
 
 import sjs
+from sjs import __version__
 from sjs.run import initialize_run, end_run
 
-@click.group()
-def cli():
-    "sub job server"
-    pass
+@click.group(invoke_without_command=True)
+@click.option('--version','-v', is_flag=True, default=False)
+def cli(version):
+    if version:
+        print(__version__)
 
 @cli.command(help="start a new run.")
 @click.option('--skip-pre-checks/--run-pre-checks', default=False)
-def start(skip_pre_checks):
+def start(skip_pre_checks, version):
     """
     Starts a new run, if one isn't already running.
 
