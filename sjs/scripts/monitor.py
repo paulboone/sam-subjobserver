@@ -30,13 +30,16 @@ signal.signal(signal.SIGTERM, signal_handler)
 def job_string(j):
     if j is None:
         return "-"
-    return "  %s (%s): %s" % (j.get_id(), j.get_status(), j.get_call_string())
+    func_name = j.func_name
+    args = j.get_call_string()[len(func_name) + 1:-1]
+    return "%s() | STATUS %s | QUEUED_AT %s | ID %s | ARGS %s" % (
+           func_name, j.get_status(), j.enqueued_at, j.get_id(), args)
 
-def print_autoy(message, yadd=0):
+def print_autoy(message, yadd=0, xadd=0):
     global ypos
     ypos += yadd
     if ypos < maxyx[0]:
-        stdscr.addstr(ypos, 0, message[0:maxyx[1]])
+        stdscr.addstr(ypos, xadd, message[0:maxyx[1]-xadd])
         ypos += 1
 
 def print_status(status_message=""):
@@ -54,18 +57,22 @@ def print_status(status_message=""):
     if status_message:
         print_autoy(status_message, yadd=1)
 
-    print_autoy("## WORKERS ##", yadd=1)
+
     ws = Worker.all(connection=conn)
+    print_autoy("WORKERS (%s): " % len(ws), yadd=1)
+    if ws:
+        for w in sorted(ws, key=lambda x: x.name):
+            print_autoy("worker %s: %s" % (w.name, job_string(w.get_current_job())), xadd=2)
+    else:
+        print_autoy("no workers", xadd=2)
 
-    for w in sorted(ws, key=lambda x: x.name):
-        print_autoy("worker %s: %s" % (w.name, job_string(w.get_current_job())))
-
-    print_autoy("## QUEUES ##", yadd=1)
     qs = Queue.all(connection=conn)
+    print_autoy("QUEUES: ", yadd=1)
     for q in sorted(qs, key=lambda x: x.name):
-        print_autoy("queue %s:" % q.name)
-        for j in q.get_jobs():
-            print_autoy(job_string(j))
+        print_autoy("%s (%s):" % (q.name, len(q)), xadd=2)
+
+        for j in sorted(q.get_jobs(), key=lambda x: x.enqueued_at):
+            print_autoy(job_string(j), xadd=4)
 
     stdscr.refresh()
 
