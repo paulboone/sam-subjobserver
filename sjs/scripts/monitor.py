@@ -1,3 +1,4 @@
+import curses
 from datetime import datetime
 import signal
 import subprocess
@@ -14,7 +15,7 @@ from sjs.curses_fullscreen import curses_fullscreen
 sjs.load()
 conn = sjs.get_redis_conn()
 stdscr = None
-
+maxyx = None
 def disable_signals():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -34,13 +35,20 @@ def job_string(j):
 def print_autoy(message, yadd=0):
     global ypos
     ypos += yadd
-    stdscr.addstr(ypos, 0, message)
-    ypos += 1
+    if ypos < maxyx[0]:
+        stdscr.addstr(ypos, 0, message[0:maxyx[1]])
+        ypos += 1
 
 def print_status(status_message=""):
     global ypos
+    global maxyx
+
     ypos = 0
     stdscr.clear()
+    if curses.is_term_resized(*maxyx):
+        maxyx = stdscr.getmaxyx()
+        curses.resizeterm(*maxyx)
+
     print_autoy(datetime.now().strftime("%c"))
 
     if status_message:
@@ -68,6 +76,7 @@ def print_status(status_message=""):
 @click.option('--skip-run-check', is_flag=True, default=False)
 def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
     global stdscr
+    global maxyx
 
     if not skip_run_check and not run_started():
         print("There is no run to resume. Are you in the right directory?")
@@ -79,6 +88,7 @@ def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
     run_finalized = False
     try:
         with curses_fullscreen() as stdscr:
+            maxyx = stdscr.getmaxyx()
             while True:
                 if first_time_through:
                     first_time_through = False
