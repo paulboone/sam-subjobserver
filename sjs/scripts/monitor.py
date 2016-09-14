@@ -53,9 +53,11 @@ def print_status(status_message=""):
         curses.resizeterm(*maxyx)
 
     print_autoy(datetime.now().strftime("%c"))
+    print_autoy("")
 
     if status_message:
-        print_autoy(status_message, yadd=1)
+        for msg in status_message.split('\n'):
+            print_autoy(msg)
 
 
     ws = Worker.all(connection=conn)
@@ -81,7 +83,8 @@ def print_status(status_message=""):
 @click.option('--auto-requeue-fails', '-ar', is_flag=True, default=False)
 @click.option('--interval', '-n', default=60, help='update interval in seconds')
 @click.option('--skip-run-check', is_flag=True, default=False)
-def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
+@click.option('--next-gen-script', help='path to script to run when workers are idle')
+def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check, next_gen_script):
     global stdscr
     global maxyx
 
@@ -120,11 +123,30 @@ def monitor(auto_finalize, auto_requeue_fails, interval, skip_run_check):
                         print_status("Unresolved jobs in failed queue.")
                     continue
 
+                message = ""
+                if next_gen_script:
+                    message += "running user-provided next generation script %s..." % next_gen_script
+                    results = subprocess.run(next_gen_script, shell=True, universal_newlines=True,
+                                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    message += "\n" + results.stdout + "\n"
+
+                    if results.returncode == 0:
+                        message += "returncode is 0, indicating more jobs were requeued"
+                        print_status(message)
+                        continue
+                    else:
+                        message += "returncode == %s, indicating no more jobs were requeued\n" \
+                                   "or the script is not executable, or cannot be found.\n" % results.returncode
+                        print_status(message)
+
                 run_looks_complete = True
                 if auto_finalize:
                     break
                 else:
-                    print_status("Run looks complete but --auto-finalize is off. Waiting for user to cntl-c.")
+                    message += "Run looks complete but --auto-finalize is off. Waiting for user to cntl-c."
+                    print_status(message)
+                    pass
+
 
 
 
