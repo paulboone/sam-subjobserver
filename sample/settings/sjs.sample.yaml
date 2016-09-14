@@ -6,5 +6,23 @@ redis:
   host: 'localhost'
   port: 6379
   db: 0
-queue: 'your_project_name'
-max_seconds_per_job: 1800
+queue: 'your_queue_name'
+data_dirs:
+- ./logs
+config_dirs:
+- ./settings
+
+# automatically ignores anything committed to github
+config_ignore:
+- __pycache__
+archive_dir: ~/sjs_archives
+working_dir: ~/.sjs
+
+# Only use max_seconds_per_job if you WANT to kill the job after a specified time. If this is
+# unspecified, the default of 100 days or 8640000 seconds will be used. In practice, this means
+# your job will run until your worker runs out of walltime.
+# max_seconds_per_job: 8640000
+
+# only use min_seconds_per_job if, when there is less than min_seconds_per_job of walltime left,
+# you want your workers to exit instead of grab the next job from the queue.
+# min_seconds_per_job: 7200

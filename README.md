@@ -1,3 +1,8 @@
+# SJS
+
+SJS has code for running a sub job server and code for managing your data provenance.
+
+
 # SAM SUBJOBSERVER
 
 This server lets you queue your own jobs outside of the SAM qsub queue. The advantages are:
@@ -43,12 +48,9 @@ Those commands will also be in your qsub script.
 
 ## Configuration setup
 
-The jobserver expects there to be a settings directory at the root level of your project. This directory should be a python module (i.e. include a __init__.py file). The two files it expects are:
+The jobserver expects there to be a settings directory at the root level of your project. This directory should be a python module (i.e. include a __init__.py file). It should contain an sjs.yaml file.
 
-- rq_worker_config.py
-- sjs.yaml
-
-You can copy the sample_settings directory from this project to your project as a starting point. Whoever deploys your software should configure those files specifically to the deployment environment. When you run your project locally to test, you should copy those config files (removing the '.sample') and adjust for your local environment. The sample files are setup right now to work with minimal changes on a local install.
+You can copy the sample_settings directory from this project to your project as a starting point. Whoever deploys your software should configure the config file specifically to the deployment environment. When you run your project locally to test, you should copy the config file (removing the '.sample') and adjust for your local environment. The sample files are setup right now to work with minimal changes on a local install.
 
 Each project should run from its own database, so make sure you ask for a unique database_id to place in your config files.
 
@@ -73,7 +75,7 @@ job_that_takes_a_long_time(10)
 job_queue.enqueue(job_that_takes_a_long_time, 10)
 ```
 
-Once your job is queued, it won't run until you launch some resources on the HPC cluster. Until then it will sit in the queue. You can use the command `sjs_status.py` or `rq info -u redis://{your_redis_url}` to look at the contents of the queue.
+Once your job is queued, it won't run until you launch some resources on the HPC cluster. Until then it will sit in the queue. You can use the command `sjsmon` or `rq info -u redis://{your_redis_url}` to look at the contents of the queue.
 
 ### Launching workers on the HPC cluster
 
