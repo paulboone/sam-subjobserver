@@ -32,6 +32,9 @@ def write_sjs_running_file(working_dir):
     with open(SJS_RUNNING_FILE, 'w') as f:
         f.write(working_dir)
 
+def delete_sjs_running_file():
+    os.remove(SJS_RUNNING_FILE)
+
 def initialize_run(skip_pre_checks=False):
 
     # setup .sjs_running_file
@@ -114,7 +117,7 @@ def end_run():
     create_archive(archive_list, archive_path)
     print("Archive complete and available at: %s" % archive_path)
 
-    os.remove(SJS_RUNNING_FILE)
+    delete_sjs_running_file()
 
     print("FINAL CHECKS:")
     for test, result in results.items():

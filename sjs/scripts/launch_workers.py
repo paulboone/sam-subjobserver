@@ -17,9 +17,14 @@ def disable_signals():
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
 def signal_handler(signal_received, frame):
-    disable_signals()
-    print("Received signal %s. Exiting." % signal_received)
-    sys.exit(0)
+    print("Received signal %s." % signal_received)
+    if signal_received == signal.SIGUSR1:
+        print("restarting workers...")
+        print("not yet implemented")
+    else:
+        print("exiting...")
+        disable_signals()
+        sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
