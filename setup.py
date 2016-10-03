@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import versioneer
 
 setup(
-    name="wilmerlab-sjs",
+    name="sjs",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     install_requires=[
@@ -12,7 +12,7 @@ setup(
         'rq',
     ],
     include_package_data=True,
-    packages=['sjs'],
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'sjs=sjs.scripts.cli:cli',
