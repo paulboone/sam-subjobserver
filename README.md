@@ -5,14 +5,14 @@ SJS has code for running a sub job server and code for managing your data proven
 
 # SAM SUBJOBSERVER
 
-This server lets you queue your own jobs outside of the SAM qsub queue. The advantages are:
+This server lets you queue your own jobs outside of the CRC slurm queue. The advantages are:
 
-- No need to write custom code to run multiple jobs on the same reserved SAM node. (i.e. no need to say run the first 100 materials on node1, the second 100 materials on node2, etc).
-- Can queue all the jobs you want to run without reserving any SAM resources.
-- Can launch as many SAM resources as you want at any time to burn through the queue. If it isn't going fast enough, add more SAM resources later.
+- No need to write custom code to run multiple jobs on the same reserved CRC node. (i.e. no need to say run the first 100 materials on node1, the second 100 materials on node2, etc).
+- Can queue all the jobs you want to run without reserving any CRC resources.
+- Can launch as many CRC resources as you want at any time to burn through the queue. If it isn't going fast enough, add more CRC resources later.
 
 
-## Recommended environment setup for Frank
+## Recommended environment setup for CRC
 
 The recommended environment is python 3.5, and a venv for your the project's requirements.
 
@@ -39,12 +39,12 @@ When you want to run your project in the future:
 
 ```
 module purge
-module load python/3.5.1
+module load python/intel-3.5
 source ~/venv/{your_project_name}/bin/activate
 cd {path to your project}
 ```
 
-Those commands will also be in your qsub script.
+Those commands will also be in your slurm script.
 
 ## Configuration setup
 
@@ -54,9 +54,9 @@ You can copy the sample_settings directory from this project to your project as 
 
 Each project should run from its own database, so make sure you ask for a unique database_id to place in your config files.
 
-## Running on Frank
+## Running on CRC
 
-Running your job on frank will take two steps: 1) queuing the work on the subjobserver and then 2) running a qsub file to load workers on the HPC cluster.
+Running your job on CRC will take two steps: 1) queuing the work on the subjobserver and then 2) running a slurm file to load workers on the H2P cluster.
 
 ### Queueing the work
 
