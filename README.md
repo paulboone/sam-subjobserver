@@ -14,20 +14,20 @@ This server lets you queue your own jobs outside of the SAM qsub queue. The adva
 
 ## Recommended environment setup for Frank
 
-The recommended environment is my python 3.5.1 binary, and a venv for your the project's requirements.
-
-Setup (sam-moduiles)[https://github.com/paulboone/sam-modules] so you can use my pre-compiled python 3.5.1 binary.
-
+The recommended environment is python 3.5, and a venv for your the project's requirements.
 
 First time project setup:
 
 ```
 module purge
-module load python/3.5.1
+module load python/intel-3.5
 
 # Create virtual environment
 mkdir -p ~/venv
-pyvenv ~/venv/{your_project_name}
+pyvenv --without-pip ~/venv/{your_project_name}
+source ~/venv/{your_project_name}/bin/activate
+curl https://bootstrap.pypa.io/get-pip.py | python
+deactivate
 source ~/venv/{your_project_name}/bin/activate
 
 cd {path to your project}
